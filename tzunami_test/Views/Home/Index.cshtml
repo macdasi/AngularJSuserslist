@@ -1,0 +1,101 @@
+﻿@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+<div ng-app="" ng-controller="usersController">
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>
+                First Name
+            </th>
+            <th>
+                Last Name
+            </th>
+            <th>
+                Phone Number
+            </th>
+            <th>
+                E-mail
+            </th>
+            <th>
+                Type
+            </th>
+            <th>Action</th>
+        </tr>
+        <tr ng-repeat="x in users">
+            <td>
+                {{ x.FirstName }}
+            </td>
+            <td>
+                {{ x.LastName }}
+            </td>
+            <td>
+                {{ x.PhoneNumber }}
+            </td>
+            <td>
+                {{ x.EMail }}
+            </td>
+            <td>
+                {{ x.Type }}
+            </td>
+            <td>
+                <a href="/home/edit/{{ x.ID }}">edit</a> |
+                <a href="/home/details/{{ x.ID }}">details</a> |
+                <a style="cursor:pointer;" ng-click="removeUser(x.ID,x.FirstName + ' ' +x.LastName);">delete</a>
+        </tr>
+    </table>
+
+    <div ng-show="errors != null" class="alert alert-danger alert-error" ng-model="errors">
+        <strong>Error! </strong><span ng-repeat="x in errors"><br />{{ x }}</span>
+    </div>
+    <div ng-show="success != null" class="success alert-success alert">
+        <strong>Success! </strong><span>{{ success }}</span>
+    </div>
+
+    <div>
+        Add New:
+        <form name="myForm" novalidate class="form-group" ng-model="user" novalidate>
+            <div class="form-horizontal">
+                <div class="form-group"><label class="control-label col-md-2">First Name</label><input type="text" ng-model="user.FirstName" /></div>
+                <div class="form-group"><label class="control-label col-md-2">Last Name</label><input type="text" ng-model="user.LastName" /></div>
+                <div class="form-group"><label class="control-label col-md-2">Phone Number</label><input type="text" ng-model="user.PhoneNumber" /></div>
+                <div class="form-group"><label class="control-label col-md-2">E-mail</label><input type="text" ng-model="user.EMail" /></div>
+                <div class="form-group"><label class="control-label col-md-2">Type</label><select ng-model="user.Type" ng-options="o as o for o in UserTypes"></select></div>
+
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <input class="btn btn-default" type="button" ng-click="reset()" value="Reset" />
+                        <input class="btn btn-info" type="submit" ng-click="update(user)" value="Save" ng-disabled="myForm.user.$dirty && myForm.user.$invalid ||
+  myForm.EMail.$dirty && myForm.EMail.$invalid" />
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    function usersController($scope, $http) {
+        $scope.removeUser = function (ID, fullname) {
+            if (confirm('Are you sure you want to delete ' + fullname + ' ?')) {
+                $http.post("/Home/Delete", { ID: ID }).success(function (response) { $scope.users = response; $scope.success = "User has been removed."; });
+            }
+        };
+
+        $http.get("/Home/GetUserTypes").success(function (response) { $scope.UserTypes = response; });
+
+        $http.get("/Home/getusers").success(function (response) { $scope.users = response; });
+
+        $scope.update = function (user) {
+            $http.post("/Home/UpdateUser", user).success(function (response) {
+                if (response.errors) {
+                    $scope.errors = response.errors; $scope.success = null;
+                }
+                else {
+                    $scope.errors = null; $scope.success = "User added to list.";
+                    $scope.users = response; $scope.user = {};
+                }
+            });
+        };
+    }
+</script>
